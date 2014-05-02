@@ -203,6 +203,9 @@ class Elements(object):
         section_area_add_object_link = '//div[contains(@class,"section-expandable")]//a[contains(text(),"+ Object")][contains(@class,"sticky")]'
         section_area_add_objective_link = '//div[contains(@class,"section-expandable")]//a[contains(text(),"+ Objective")]'
         search_inputfield = '//input[@class="widgetsearch"]'
+        widget_active_first_tier = '//section[contains(@class, "widget-active")][@id="OBJECT_widget"]'  # lowercase type
+        widget_active_object_list = widget_active_first_tier + '//ul[contains(@class, "tree-structure")]'
+        list_spinner = '//*[contains(@class, "tree-spinner")]'
 
         autocomplete_list_first_element = '//ul[contains(concat(" ", normalize-space(@class), " "), " ui-autocomplete ")]/li[contains(@class, "ui-menu-item")]'
         autocomplete_list_element_with_text = '//ul[contains(concat(" ", normalize-space(@class), " "), " ui-autocomplete ")]/li[contains(@class, "ui-menu-item")]/a/span[contains(text(), "TEXT")]/..'

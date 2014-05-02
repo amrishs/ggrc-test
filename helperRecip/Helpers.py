@@ -23,6 +23,7 @@ from testcase import WebDriverTestCase
 
 # ON OTHER DEPLOYMENTS, CHANGE THIS to the server user name
 SERVER_USER = 'jenkins'
+SPINNER_APPEARANCE_WAIT = 0.2  # seconds to wait for spinner to appear if it appears at all
 
 def log_time(f):
     """decorator that records function time and stores it to the self.test.benchmark dict with key = function name and value = list of durations of all invocations of that function"""
@@ -575,23 +576,7 @@ class Helpers(unittest.TestCase):
     def navigateToMappingWindowForObject(self, object, expandables=()):
         """Set expandables to the list of object types whose footer expands when you hover over the "add" button.
         """
-        self.assertTrue(self.util.waitForElementToBePresent(self.element.inner_nav_section),"ERROR inside mapAObjectWidget(): can't see inner_nav_section")
-            
-        #click on the inner nav and wait for the corresponding widhet section to become active
-        
-        inner_nav_object_link = self.element.inner_nav_object_link.replace("OBJECT", object.lower())
-        self.assertTrue(self.util.waitForElementToBePresent(inner_nav_object_link),"ERROR mapAObjectWidget XXX(): can't see inner_nav_object_link for "+object)
-        self.util.waitForElementToBeVisible(inner_nav_object_link)
-
-        #self.util.waitForElementToBeClickable(inner_nav_object_link)
-        #self.assertTrue(self.util.isElementPresent(inner_nav_object_link), "no inner nav link for "+ object)
-
-        result=self.util.clickOn(inner_nav_object_link)
-        self.assertTrue(result,"ERROR in mapAObjectWidget(): could not click "+inner_nav_object_link + " for object "+object)
-        active_section = self.element.section_active.replace("SECTION", object.lower())
-        self.assertTrue(self.util.waitForElementToBePresent(active_section), "ERROR inside mapAObjectWidget(): no active section for "+ object)
-        
-        #click on the object link in the widget to  search for other objects modal
+        result = self.navigateToWidget(object)
         if object in expandables:
             open_mapping_modal_window_link = self.element.section_widget_expanded_join_link1.replace("OBJECT", object.lower())
         else: 
@@ -611,6 +596,32 @@ class Helpers(unittest.TestCase):
             result=self.util.clickOn(open_mapping_modal_window_link)
         self.assertTrue(result,"ERROR in mapAObjectWidget(): could not click on "+open_mapping_modal_window_link+" for object "+object)
         self.assertTrue(self.util.waitForElementToBePresent(self.element.mapping_modal_window), "ERROR inside mapAObjectWidget(): cannot see the mapping modal window")
+
+    @log_time
+    def navigateToWidget(self, object):
+        self.assertTrue(self.util.waitForElementToBePresent(self.element.inner_nav_section), "ERROR inside navigateToWidget(): can't see inner_nav_section")
+        inner_nav_object_link = self.element.inner_nav_object_link.replace("OBJECT", object.lower())
+        target_widget_tier = self.element.widget_active_first_tier.replace("OBJECT", object.lower())
+        widget_list = self.element.widget_active_object_list.replace("OBJECT", object.lower())
+        result = self.util.clickOn(inner_nav_object_link)
+        print "Spinner appears? ", self.util.isElementPresent(widget_list + self.element.list_spinner)
+        self.waitForResultsToLoad(widget_list)
+        # Another check...
+        if self.util.isElementVisible(self.element.gapi_modal):
+            self.authorizeGAPI()
+        return result
+
+    @log_time
+    def waitForResultsToLoad(self, list_selector):
+        spinner = list_selector + self.element.list_spinner
+        print "Spinner appears? ", self.util.isElementPresent(spinner)
+        is_list_present = self.util.waitForElementToBePresent(list_selector)
+        print "List is present? ", is_list_present
+        spinner = list_selector + self.element.list_spinner
+        needs_spinner = self.util.waitForElementToBePresent(spinner, SPINNER_APPEARANCE_WAIT)
+        print "Spinner appears? ", self.util.isElementPresent(spinner)
+        if needs_spinner:
+            self.util.waitForElementNotToBePresent(spinner)
 
     @log_time
     def mapFirstObject(self, object, is_program=False):
